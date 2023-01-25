@@ -26,8 +26,8 @@ jobs:
       run: dotnet test --no-build --verbosity normal
       
     - name: push Scifa.UnionTypes.Attributes
-      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) Scifa.UnionTypes.Attributes/**/Scifa.UnionTypes.Attributes.*.nupkg
+      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) ./Scifa.UnionTypes.Attributes/**/Scifa.UnionTypes.Attributes.*.nupkg
     - name: push Scifa.UnionTypes.Generator
-      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) Scifa.UnionTypes.Generator/**/Scifa.UnionTypes.Generator.*.nupkg
+      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) ./Scifa.UnionTypes.Generator/**/Scifa.UnionTypes.Generator.*.nupkg
     - name: push Scifa.UnionTypes
-      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) Scifa.UnionTypes/**/Scifa.UnionTypes.*.nupkg
+      run: dotnet nuget push -s nuget.org -k $(NUGETPUSHKEY) ./Scifa.UnionTypes/**/Scifa.UnionTypes.*.nupkg
