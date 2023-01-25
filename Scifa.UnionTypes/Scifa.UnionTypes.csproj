@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Scifa.UnionTypes.Attributes\Scifa.UnionTypes.Attributes.csproj" />
+    <ProjectReference Include="..\Scifa.UnionTypes.Generator\Scifa.UnionTypes.Generator.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Scifa.UnionTypes.Attributes\Scifa.UnionTypes.Attributes.csproj" />
+    <ProjectReference Include="..\Scifa.UnionTypes.Generator\Scifa.UnionTypes.Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".\obj\Debug\net7.0\generated\Scifa.UnionTypes.Generator\UnionTypes.Generator.UnionGenerator\**\*.cs" Link="Generated/%(FileName)%(Extension)" />
+  </ItemGroup>
+
+</Project>
