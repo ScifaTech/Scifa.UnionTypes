@@ -29,6 +29,6 @@ jobs:
       env:
         NUGETPUSHKEY: ${{ secrets.NUGETPUSHKEY }}
       run: |
-        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY ./Scifa.UnionTypes.Attributes/**/Scifa.UnionTypes.Attributes.*.nupkg
-        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY ./Scifa.UnionTypes.Generator/**/Scifa.UnionTypes.Generator.*.nupkg
-        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY ./Scifa.UnionTypes/**/Scifa.UnionTypes.*.nupkg
+        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Scifa.UnionTypes.Attributes/**/Scifa.UnionTypes.Attributes.*.nupkg
+        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Scifa.UnionTypes.Generator/**/Scifa.UnionTypes.Generator.*.nupkg
+        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Scifa.UnionTypes/**/Scifa.UnionTypes.*.nupkg
