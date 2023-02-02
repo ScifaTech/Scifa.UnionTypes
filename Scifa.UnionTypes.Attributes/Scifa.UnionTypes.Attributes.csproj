@@ -7,7 +7,7 @@
     <RootNamespace>UnionTypes</RootNamespace>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix>0.0.2</VersionPrefix>
     <IncludeSources>true</IncludeSources>
     <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
