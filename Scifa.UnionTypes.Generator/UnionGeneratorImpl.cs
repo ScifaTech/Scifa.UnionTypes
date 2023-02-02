@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
 
 namespace UnionTypes.Generator
 {
@@ -205,21 +206,20 @@ namespace UnionTypes.Generator
 
         private static UnionCase[] GetCases(INamedTypeSymbol typeSymbol)
         {
-            var unorderedCases = (from indexed in typeSymbol.GetMembers().OfType<IMethodSymbol>().Indexed()
-                                  let method = indexed.value
-                                  let index = indexed.index
+            var unorderedCases = (from method in typeSymbol.GetMembers().OfType<IMethodSymbol>()
                                   where method.IsPartialDefinition
                                       && !method.ReturnsVoid
                                       && !method.IsGenericMethod
                                   where SymbolEqualityComparer.Default.Equals(method.ReturnType, typeSymbol)
-                                  select new UnionCase(index, typeSymbol, method)
-                                 ).ToArray();
+                                  select new UnionCase(0, typeSymbol, method)
+                                 )
+                                 .ToArray();
 
             var possibleDefaults = unorderedCases.Where(x => x.Parameters.Length == 0);
             if (possibleDefaults.Any() && !possibleDefaults.Skip(1).Any())
                 possibleDefaults.First().IsDefault = true;
 
-            var cases = unorderedCases.OrderBy(x => x.IsDefault ? 0 : 1).ToArray();
+            var cases = unorderedCases.OrderBy(x => x.IsDefault ? 0 : 1).Indexed().Select(x => x.value with { Index = x.index }).ToArray();
             return cases;
         }
 
@@ -275,38 +275,19 @@ namespace UnionTypes.Generator
         private string GetTypeClosers(INamedTypeSymbol[] typeNesting) => new string('}', typeNesting.Length);
     }
 
-    internal class UnionCase
+    internal record UnionCase(int Index, INamedTypeSymbol TypeSymbol, IMethodSymbol MethodSymbol)
     {
-        public UnionCase(int index, INamedTypeSymbol type, IMethodSymbol method)
-        {
-            Index = index;
-            Accessibility = method.DeclaredAccessibility.GetSourceText();
-            PascalName = method.Name.ToPascalCase();
-            CamelName = method.Name.ToCamelCase();
-
-            Parameters = method.Parameters.Select(param => new UnionCaseParameter(type, method, param)).ToArray();
-        }
-
-        public int Index { get; }
-        public object Accessibility { get; }
-        public string PascalName { get; }
-        public string CamelName { get; }
-        public UnionCaseParameter[] Parameters { get; }
+        public object Accessibility { get; } = MethodSymbol.DeclaredAccessibility.GetSourceText();
+        public string PascalName { get; } = MethodSymbol.Name.ToPascalCase();
+        public string CamelName { get; } = MethodSymbol.Name.ToCamelCase();
+        public UnionCaseParameter[] Parameters { get; } = MethodSymbol.Parameters.Select(param => new UnionCaseParameter(TypeSymbol, MethodSymbol, param)).ToArray();
         public bool IsDefault { get; internal set; }
     }
 
-    internal class UnionCaseParameter
+    internal record UnionCaseParameter(INamedTypeSymbol TypeSymbol, IMethodSymbol MethodSymbol, IParameterSymbol ParameterSymbol)
     {
-        public UnionCaseParameter(INamedTypeSymbol type, IMethodSymbol method, IParameterSymbol param)
-        {
-
-            PascalName = param.Name.ToPascalCase();
-            CamelName = param.Name.ToCamelCase();
-            TypeName = param.Type.GetFullName();
-        }
-
-        public string PascalName { get; }
-        public string CamelName { get; }
-        public string TypeName { get; }
+        public string PascalName { get; } = ParameterSymbol.Name.ToPascalCase();
+        public string CamelName { get; } = ParameterSymbol.Name.ToCamelCase();
+        public string TypeName { get; } = ParameterSymbol.Type.GetFullName();
     }
 }

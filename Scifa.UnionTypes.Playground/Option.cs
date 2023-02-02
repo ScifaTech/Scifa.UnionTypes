@@ -5,10 +5,12 @@ namespace Playground;
 [UnionType]
 public readonly partial record struct Option<T>
 {
+    public static readonly Option<T> Null = None();
+
     public static partial Option<T> None();
 
     public static partial Option<T> Some(T value);
-    
+
     public Option<TOut> Map<TOut>(Func<T, TOut> mapper)
         => Match(
             none: () => Option<TOut>.None(),
