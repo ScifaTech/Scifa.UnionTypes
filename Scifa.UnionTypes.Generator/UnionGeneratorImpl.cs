@@ -108,9 +108,9 @@ namespace UnionTypes.Generator
                     __caseData = caseData;
                 }
 
-                {{MatchFunctions(cases)}}
+            {{MatchFunctions(cases)}}
             
-                {{DoFunctions(cases)}}
+            {{DoFunctions(cases)}}
             
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 private static TOut ThrowInvalidCaseException<TOut>(int @case)
@@ -118,11 +118,11 @@ namespace UnionTypes.Generator
                     throw new InvalidOperationException($"Invalid state achieved for union of type {{typeSymbol.Name}}: case {@case} does not exist");
                 }
 
-                {{CaseRecords(cases)}}
+            {{CaseRecords(cases)}}
             """;
         }
 
-        private object MatchFunctions(UnionCase[] cases)
+        private string MatchFunctions(UnionCase[] cases)
             => $$"""
                 public TOut Match<TOut>({{cases.Select(
                             @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}> {@case.CamelName}"
@@ -131,7 +131,7 @@ namespace UnionTypes.Generator
                     => __case switch
                     {
                         {{cases.Select(@case =>
-                                           $$"""{{@case.Index}} => {{@case.CamelName}}({{@case.Parameters.Select(arg => $"(({@case.PascalName}CaseData)__caseData).{arg.PascalName}").Join(", ")}}),"""
+                                           $$"""{{@case.Index}} => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),"""
                           ).Join("\n            ")}}
                         var x => ThrowInvalidCaseException<TOut>(x)
                     };
@@ -145,7 +145,7 @@ namespace UnionTypes.Generator
                     {
                         {{cases.Select(
                             @case =>
-                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(arg => $"(({@case.PascalName}CaseData)__caseData).{arg.PascalName}").Join(", ")}}),""").Join("\n            ")}}
+                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
                         _ => otherwise()
                     };
                     
@@ -158,7 +158,7 @@ namespace UnionTypes.Generator
                     {
                         {{cases.Select(
                             @case =>
-                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(arg => $"(({@case.PascalName}CaseData)__caseData).{arg.PascalName}").Join(", ")}}),""").Join("\n            ")}}
+                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
                         _ => otherwise
                     };
             """;
@@ -176,8 +176,7 @@ namespace UnionTypes.Generator
                 {
                     switch (__case)
                     {
-                        {{cases.Select(@case =>
-                                             $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(arg => $"(({@case.PascalName}CaseData)__caseData).{arg.PascalName}").Join(", ")}}); break;"""
+                        {{cases.Select(@case => $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
                         default: ThrowInvalidCaseException<byte>(__case); break;
                     }
@@ -196,8 +195,7 @@ namespace UnionTypes.Generator
                 {
                     switch (__case)
                     {
-                        {{cases.Select(@case =>
-                                                            $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(arg => $"(({@case.PascalName}CaseData)__caseData).{arg.PascalName}").Join(", ")}}); break;"""
+                        {{cases.Select(@case => $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
                         default: ThrowInvalidCaseException<byte>(__case); break;
                     }
@@ -249,27 +247,23 @@ namespace UnionTypes.Generator
         private string CaseConstructor(INamedTypeSymbol type, UnionCase @case)
         {
             string typeName = type.GetLocalName();
-            if (@case.IsDefault)
-            {
-                return $$"""{{@case.Accessibility}} static partial {{typeName}} {{@case.PascalName}}() => default;""";
-            }
-            else
-            {
-                var caseArgs = @case.Parameters.Select(param => $"{param.TypeName} {param.CamelName}").Join(", ");
-                var caseData =
-                    $$"""new {{@case.PascalName}}CaseData({{@case.Parameters.Select(param => param.CamelName).Join(", ")}})""";
+            string signature = $$"""{{@case.Accessibility}} static partial {{typeName}} {{@case.PascalName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.CamelName}}""").Join(", ")}}) => """;
+            var caseArgs = @case.Parameters.Select(param => $"{param.TypeName} {param.CamelName}").Join(", ");
 
-                return $$"""
-                        {{@case.Accessibility}} static partial {{typeName}} {{@case.PascalName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.CamelName}}""").Join(", ")}})
-                                => new {{typeName}}({{@case.Index}}, {{caseData}} );
-                        """;
-            }
+            var body = @case switch
+            {
+                { IsDefault: true } => "default",
+                { EmitCaseType: true } => $$"""new {{{typeName}}}({{{@case.Index}}}, new {{@case.TypeName}}({{@case.Parameters.Select(param => param.CamelName).Join(", ")}}) )""",
+                _ => $$"""new {{typeName}}({{@case.Index}}, {{@case.Parameters[0].CamelName}})"""
+            };
+
+            return $"{signature}{body};";
         }
 
         private string CaseRecords(UnionCase[] cases)
-            => cases.Where(x => !x.IsDefault)
+            => cases.Where(x => x.EmitCaseType)
                 .Select(@case =>
-                    $$"""private record struct {{@case.PascalName}}CaseData({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.PascalName}}""").Join(", ")}});"""
+                    $$"""private record struct {{@case.TypeName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.PascalName}}""").Join(", ")}});"""
                 ).Join("\n    ");
 
         private string GetTypeClosers(INamedTypeSymbol[] typeNesting) => new string('}', typeNesting.Length);
@@ -280,11 +274,20 @@ namespace UnionTypes.Generator
         public object Accessibility { get; } = MethodSymbol.DeclaredAccessibility.GetSourceText();
         public string PascalName { get; } = MethodSymbol.Name.ToPascalCase();
         public string CamelName { get; } = MethodSymbol.Name.ToCamelCase();
-        public UnionCaseParameter[] Parameters { get; } = MethodSymbol.Parameters.Select(param => new UnionCaseParameter(TypeSymbol, MethodSymbol, param)).ToArray();
+        public bool EmitCaseType { get; } = MethodSymbol.Parameters.Count() > 1;
+        public UnionCaseParameter[] Parameters { get; } = MethodSymbol.Parameters.Select(param => new UnionCaseParameter(param)).ToArray();
         public bool IsDefault { get; internal set; }
+        public object TypeName => EmitCaseType
+            ? $"{PascalName}CaseData"
+            : MethodSymbol.Parameters.Any()
+                ? MethodSymbol.Parameters[0].Type
+                : "Unit";
+
+        public string ValueAccessExpression(UnionCaseParameter param)
+            => this.EmitCaseType ? $"(({this.TypeName})__caseData).{param.PascalName}" : $"(({this.TypeName})__caseData)";
     }
 
-    internal record UnionCaseParameter(INamedTypeSymbol TypeSymbol, IMethodSymbol MethodSymbol, IParameterSymbol ParameterSymbol)
+    internal record UnionCaseParameter(IParameterSymbol ParameterSymbol)
     {
         public string PascalName { get; } = ParameterSymbol.Name.ToPascalCase();
         public string CamelName { get; } = ParameterSymbol.Name.ToCamelCase();
