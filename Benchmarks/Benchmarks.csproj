@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="bin\Release\net7.0\BenchmarkDotNet.Artifacts\results\**\*" Link="Results/%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />

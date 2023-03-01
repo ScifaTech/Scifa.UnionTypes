@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
 <meta charset='utf-8' />
-<title>Benchmarks.Option-20230301-215156</title>
+<title>Benchmarks.Option-20230301-221758</title>
 
 <style type="text/css">
 	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
@@ -22,10 +22,12 @@ Intel Core i7-1065G7 CPU 1.30GHz, 1 CPU, 8 logical and 4 physical cores
 <pre><code></code></pre>
 
 <table>
-<thead><tr><th>             Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Ratio</th><th>Code Size</th><th>Allocated</th><th>Alloc Ratio</th>
+<thead><tr><th>                  Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Ratio</th><th>Code Size</th><th>Allocated</th><th>Alloc Ratio</th>
 </tr>
-</thead><tbody><tr><td>CreateAndMatch_OneOf</td><td>11.093 ns</td><td>0.0606 ns</td><td>0.0506 ns</td><td>1.00</td><td>336 B</td><td>-</td><td>NA</td>
-</tr><tr><td>CreateAndMatch_UnionTypes</td><td>6.412 ns</td><td>0.0352 ns</td><td>0.0312 ns</td><td>0.58</td><td>404 B</td><td>-</td><td>NA</td>
+</thead><tbody><tr><td>CreateAndMatch_None_OneOf</td><td>10.650 ns</td><td>0.0854 ns</td><td>0.0799 ns</td><td>1.00</td><td>333 B</td><td>-</td><td>NA</td>
+</tr><tr><td>CreateAndMatch_None_UnionTypes</td><td>6.359 ns</td><td>0.0625 ns</td><td>0.0554 ns</td><td>0.60</td><td>389 B</td><td>-</td><td>NA</td>
+</tr><tr><td>CreateAndMatch_Some_OneOf</td><td>10.843 ns</td><td>0.0742 ns</td><td>0.0694 ns</td><td>1.00</td><td>336 B</td><td>-</td><td>NA</td>
+</tr><tr><td>CreateAndMatch_Some_UnionTypes</td><td>6.531 ns</td><td>0.0531 ns</td><td>0.0415 ns</td><td>0.60</td><td>404 B</td><td>-</td><td>NA</td>
 </tr></tbody></table>
 </body>
 </html>
