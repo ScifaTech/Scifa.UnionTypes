@@ -3,7 +3,7 @@
 namespace Scifa.UnionTypes.CommonUnions
 {
     [UnionType]
-    public partial struct Option<T>
+    public readonly partial struct Option<T>
     {
         public static partial Option<T> None();
         public static partial Option<T> Some(T value);
@@ -17,7 +17,7 @@ namespace Scifa.UnionTypes.CommonUnions
         public static UntypedNone None => new UntypedNone();
 
 
-        public static Option<U> Map<T, U>(this Option<T> @this, Func<T, U> map) => @this.Match(some: x => Option<U>.Some(map(x)), none: () => Option<U>.None());
+        public static Option<U> Map<T, U>(this Option<T> @this, Func<T, U> map) => @this.Bind(x => Option<U>.Some(map(x)));
         public static Option<U> Bind<T, U>(this Option<T> @this, Func<T, Option<U>> map) => @this.Match(some: x => map(x), none: Option<U>.None);
     }
 

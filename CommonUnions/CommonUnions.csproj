@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <RootNamespace>Scifa.UnionTypes.CommonUnions</RootNamespace>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -8,8 +9,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\Scifa.UnionTypes.Attributes\Scifa.UnionTypes.Attributes.csproj" />
-    <ProjectReference Include="..\Scifa.UnionTypes.Generator\Scifa.UnionTypes.Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\Contract\Contract.csproj" />
+    <ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
   </ItemGroup>
   
   <ItemGroup>
