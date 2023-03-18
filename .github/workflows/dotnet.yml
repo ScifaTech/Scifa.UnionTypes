@@ -19,7 +19,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore -c Release --locked-mode
+      run: dotnet restore --locked-mode
     - name: Build
       run: dotnet build -c Release --no-restore
     - name: Test
