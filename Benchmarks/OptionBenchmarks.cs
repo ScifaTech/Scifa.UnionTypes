@@ -7,7 +7,7 @@ using Scifa.UnionTypes.CommonUnions;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-[DisassemblyDiagnoser]
+[DisassemblyDiagnoser()]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
 public class OptionBenchmarks
 {
@@ -17,7 +17,6 @@ public class OptionBenchmarks
     public string CreateAndMatch_Some_UnionTypes() => Option<string>.Some("abc").Match(some: x => x, none: () => string.Empty);
     [Benchmark, BenchmarkCategory("Some")]
     public string CreateAndMatch_Some_UnionTypes_static() => Option.Some("abc").Match(some: x => x, none: () => string.Empty);
-
 
     [Benchmark(Baseline = true), BenchmarkCategory("None")]
     public string CreateAndMatch_None_OneOf() => ((OneOf<string, None>)new None()).Match(x => x, x => string.Empty);

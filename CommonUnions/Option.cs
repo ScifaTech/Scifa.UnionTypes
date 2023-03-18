@@ -1,4 +1,5 @@
-﻿using UnionTypes;
+﻿using System;
+using UnionTypes;
 
 namespace Scifa.UnionTypes.CommonUnions
 {

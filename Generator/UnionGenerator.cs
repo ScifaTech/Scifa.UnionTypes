@@ -1,9 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System.Diagnostics;
-using System.Net.Http.Headers;
+using System;
 
 namespace UnionTypes.Generator
 {

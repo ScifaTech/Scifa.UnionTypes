@@ -1,19 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <RootNamespace>Scifa.UnionTypes.CommonUnions</RootNamespace>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Contract\Contract.csproj" />
-    <ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Include=".\obj\$(Configuration)\net7.0\generated\Scifa.UnionTypes.Generator\UnionTypes.Generator.UnionGenerator\**\*.cs" Link="Generated/%(FileName)%(Extension)" />
-  </ItemGroup>
+	<PropertyGroup>
+		<RootNamespace>Scifa.UnionTypes.CommonUnions</RootNamespace>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+	</PropertyGroup>
+
+	<PropertyGroup Label="NuGet">
+		<PackageId>Scifa.UnionTypes.CommonUnions</PackageId>
+		<VersionPrefix>0.0.1</VersionPrefix>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Contract\Contract.csproj" />
+		<ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include=".\obj\$(Configuration)\net7.0\generated\Generator\UnionTypes.Generator.UnionGenerator\**\*.cs" Link="Generated/%(FileName)%(Extension)" />
+	</ItemGroup>
 </Project>

@@ -16,7 +16,7 @@ public class OptionTests
     [Property]
     public void Equality_Some(NonNull<object> value)
         => typeof(OptionTests)
-            .GetMethod(nameof(Equality_Some_T), BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetMethod(nameof(Equality_Some_T), BindingFlags.Instance | BindingFlags.NonPublic)!
             .MakeGenericMethod(value.Get.GetType())
             .Invoke(this, new object[] { value.Get });
 

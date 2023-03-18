@@ -3,12 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography;
 using System.Text;
-using System.Xml;
 
 namespace UnionTypes.Generator
 {
@@ -197,7 +192,7 @@ namespace UnionTypes.Generator
                     {
                         {{cases.Select(@case => $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
-                        default: ThrowInvalidCaseException<byte>(__case); break;
+                        default: otherwise(); break;
                     }
                 }
             """;
