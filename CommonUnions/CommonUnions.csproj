@@ -11,6 +11,8 @@
 		<PackageId>Scifa.UnionTypes.CommonUnions</PackageId>
 		<VersionPrefix>0.0.1</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSources>true</IncludeSources>
+		<IncludeSymbols>true</IncludeSymbols>
 	</PropertyGroup>
 
 	<ItemGroup>
