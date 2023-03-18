@@ -1,4 +1,4 @@
-﻿namespace Scifa.UnionTypes.CommonUnions;
+﻿namespace Scifa.UnionTypes;
 
 public readonly struct Unit
 {

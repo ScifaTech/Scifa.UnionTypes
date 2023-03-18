@@ -11,7 +11,7 @@ namespace UnionTypes.Generator
     {
         public static bool TryGetInstance(Compilation compilation, [NotNullWhen(true)] out UnionGeneratorImpl? generator)
         {
-            var namedTypeAttributeSymbol = compilation.GetTypeByMetadataName("UnionTypes.UnionTypeAttribute");
+            var namedTypeAttributeSymbol = compilation.GetTypeByMetadataName("Scifa.UnionTypes.UnionTypeAttribute");
             if (namedTypeAttributeSymbol is null)
             {
                 generator = default;

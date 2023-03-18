@@ -1,16 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <RootNamespace>Scifa.UnionTypes.Contract</RootNamespace>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <RootNamespace>UnionTypes</RootNamespace>
-    <LangVersion>latest</LangVersion>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionPrefix>0.0.2</VersionPrefix>
-    <IncludeSources>true</IncludeSources>
-    <IncludeSymbols>true</IncludeSymbols>
-  </PropertyGroup>
+	<PropertyGroup>
+		<RootNamespace>Scifa.UnionTypes.Contract</RootNamespace>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<RootNamespace>Scifa.UnionTypes</RootNamespace>
+		<LangVersion>latest</LangVersion>
+		<VersionPrefix>0.0.2</VersionPrefix>
+	</PropertyGroup>
+
+	<PropertyGroup Label="NuGet">
+		<PackageId>Scifa.UnionTypes.Generator</PackageId>
+		<VersionPrefix>0.0.2</VersionPrefix>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSources>true</IncludeSources>
+		<IncludeSymbols>true</IncludeSymbols>
+	</PropertyGroup>
 
 </Project>

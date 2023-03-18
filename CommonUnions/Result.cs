@@ -1,7 +1,6 @@
 ﻿using System;
-using UnionTypes;
 
-namespace Scifa.UnionTypes.CommonUnions;
+namespace Scifa.UnionTypes;
 
 public static class Result
 {

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using FsCheck;
 using FsCheck.Xunit;
-using Scifa.UnionTypes.CommonUnions;
+using Scifa.UnionTypes;
 using System.Reflection;
 using Xunit;
 

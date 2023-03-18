@@ -2,7 +2,7 @@
 using BenchmarkDotNet.Configs;
 using OneOf;
 using OneOf.Types;
-using Scifa.UnionTypes.CommonUnions;
+using Scifa.UnionTypes;
 
 namespace Benchmarks;
 
