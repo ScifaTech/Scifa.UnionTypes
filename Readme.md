@@ -47,8 +47,8 @@ using UnionTypes;
 [UnionType]
 public readonly partial record struct LList<T>
 {
-    public static partial Option<T> Empty();
-    public static partial Option<T> Node(T value, LList<T> next);
+    public static partial LList<T> Empty();
+    public static partial LList<T> Node(T value, LList<T> next);
 }
 ```
 
