@@ -13,10 +13,12 @@
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
-		<PackageReadmeFile>../Readme.md</PackageReadmeFile>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="..\Readme.md" Pack="true" PackagePath="\"/>
+
 		<ProjectReference Include="..\Contract\Contract.csproj" />
 		<ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
 	</ItemGroup>
