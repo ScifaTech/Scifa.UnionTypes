@@ -43,7 +43,7 @@ public readonly partial record struct Option<T>
 ### Singly-linked list LList<T> = Empty | Node<T>
 
 ```csharp
-using UnionTypes;
+using Scifa.UnionTypes;
 
 [UnionType]
 public readonly partial record struct LList<T>
@@ -54,7 +54,7 @@ public readonly partial record struct LList<T>
 ```
 
 ```csharp
-var list = LList.Node(1, LList.Node(2, LList.Node(3)));
+var list = LList.Node(1, LList.Node(2, LList.Node(3, LList.Empty())));
 
 ```
 
