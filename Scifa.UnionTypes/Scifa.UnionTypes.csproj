@@ -8,11 +8,12 @@
 
 	<PropertyGroup Label="NuGet">
 		<PackageId>Scifa.UnionTypes</PackageId>
-		<VersionPrefix>0.0.3.1</VersionPrefix>
+		<VersionPrefix>0.0.3.2</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<PackageReadmeFile>../Readme.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
