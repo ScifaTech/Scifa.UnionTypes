@@ -6,12 +6,11 @@
 		<Nullable>enable</Nullable>
 		<RootNamespace>Scifa.UnionTypes</RootNamespace>
 		<LangVersion>latest</LangVersion>
-		<VersionPrefix>0.0.2</VersionPrefix>
 	</PropertyGroup>
 
 	<PropertyGroup Label="NuGet">
-		<PackageId>Scifa.UnionTypes.Generator</PackageId>
-		<VersionPrefix>0.0.2</VersionPrefix>
+		<PackageId>Scifa.UnionTypes.Contract</PackageId>
+		<VersionPrefix>0.0.2.1</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSources>true</IncludeSources>
 		<IncludeSymbols>true</IncludeSymbols>
