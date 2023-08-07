@@ -9,7 +9,7 @@
 
 	<PropertyGroup Label="NuGet">
 		<PackageId>Scifa.UnionTypes.CommonUnions</PackageId>
-		<VersionPrefix>0.0.1</VersionPrefix>
+		<VersionPrefix>0.0.2</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSources>true</IncludeSources>
 		<IncludeSymbols>true</IncludeSymbols>

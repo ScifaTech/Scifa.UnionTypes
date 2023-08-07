@@ -88,5 +88,8 @@ namespace UnionTypes.Generator
 
         public static string Join(this IEnumerable<string> source, string separator)
             => string.Join(separator, source);
+
+        public static string NormalizeLineEndings(this string source)
+            => source.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
     }
 }

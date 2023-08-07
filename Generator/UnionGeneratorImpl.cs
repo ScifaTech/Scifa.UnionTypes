@@ -83,7 +83,7 @@ namespace UnionTypes.Generator
                 {{GetUnionTypeBody(model, typeSymbol)}}
                 
                 {{GetTypeClosers(typeNesting)}}
-                """,
+                """.NormalizeLineEndings(),
                 Encoding.UTF8);
         }
 
@@ -97,7 +97,6 @@ namespace UnionTypes.Generator
                 private readonly int __case;
                 private readonly object __caseData;
             
-                
                 private {{typeSymbol.Name}}(int @case, object caseData){
                     __case = @case;
                     __caseData = caseData;
@@ -119,6 +118,11 @@ namespace UnionTypes.Generator
 
         private string MatchFunctions(UnionCase[] cases)
             => $$"""
+                /// <summary>
+                /// Given a function to excute for each union case, this method will select the the function for the the current case and execute that function providing the case arguments as function arguments.
+                /// </summary>
+                {{cases.Select(@case => $$"""/// <param name="{{@case.CamelName}}">The function to execute if this instance is a case of `{{@case.PascalName}}`.</param>""").Join("\n    ")}}
+                /// <returns>The result of the given function for the current case.</returns>
                 public TOut Match<TOut>({{cases.Select(
                             @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}> {@case.CamelName}"
                         )
@@ -130,7 +134,13 @@ namespace UnionTypes.Generator
                           ).Join("\n            ")}}
                         var x => ThrowInvalidCaseException<TOut>(x)
                     };
-                    
+                
+                /// <summary>
+                /// Given a function to excute for some union cases and an `otherwise` function, this method will select the the function for the the current case and execute that function providing the case arguments as function arguments.
+                /// </summary>
+                {{cases.Select(@case => $$"""/// <param name="{{@case.CamelName}}">The function to execute if this instance is a case of `{{@case.PascalName}}`.</param>""").Join("\n    ")}}
+                /// <param name="otherwise">The function to execute if this instance represents a case with no specific handler.</param>
+                /// <returns>The result of the given function for the current case or the result of the `otherwise` function if no specific function was given.</returns>
                 public TOut Match<TOut>({{cases.Select(
                             @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}>? {@case.CamelName} = null"
                         )
@@ -143,23 +153,14 @@ namespace UnionTypes.Generator
                                 $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
                         _ => otherwise()
                     };
-                    
-                public TOut Match<TOut>({{cases.Select(
-                            @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}>? {@case.CamelName} = null"
-                        )
-                        .Prepend("TOut otherwise")
-                        .Join(", ")}})
-                    => __case switch
-                    {
-                        {{cases.Select(
-                            @case =>
-                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
-                        _ => otherwise
-                    };
             """;
 
         private object DoFunctions(UnionCase[] cases)
             => $$"""
+                /// <summary>
+                /// Given an action to excute for each union case, this method will select the the action for the the current case and execute that action providing the case arguments as action arguments.
+                /// </summary>
+                {{cases.Select(@case => $$"""/// <param name="{{@case.CamelName}}">The action to execute if this instance is a case of `{{@case.PascalName}}`.</param>""").Join("\n    ")}}
                 public void Do({{(cases.Select(
                         @case =>
                             @case.Parameters switch
@@ -177,6 +178,11 @@ namespace UnionTypes.Generator
                     }
                 }
             
+                /// <summary>
+                /// Given an action to excute for some union cases and an `otherwise` action, this method will select the the action for the the current case and execute that action providing the case arguments as action arguments.
+                /// </summary>
+                {{cases.Select(@case => $$"""/// <param name="{{@case.CamelName}}">The action to execute if this instance is a case of `{{@case.PascalName}}`.</param>""").Join("\n    ")}}
+                /// <param name="otherwise">The action to execute if this instance represents a case with no specific handler.</param>
                 public void Do({{(cases.Select(
                         @case =>
                             @case.Parameters switch

@@ -9,7 +9,7 @@
 
 	<PropertyGroup Label="NuGet">
 		<PackageId>Scifa.UnionTypes.Generator</PackageId>
-		<VersionPrefix>0.0.2</VersionPrefix>
+		<VersionPrefix>0.0.3</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
