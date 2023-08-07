@@ -1,15 +1,16 @@
 # Union Types
-Allowing C# to represent unions. Also known as "sum types" or "intersection types", union types allow modelling the concept of a thing be wither A _OR_ B.
+Allowing C# to represent unions. Also known as "sum types" or "intersection types", union types allow modelling the concept of a thing being either A _OR_ B.
 
 Examples:
 - Modelling PATCH operations: a value could either be set or not set (Option/Maybe type)
 - A call to a database will result in either a dataset or an error (Result type)
-- Money coming into your account could be income or a refund from a shop or someone paying you back for something
+- Money coming into your bank account could be income or a refund from a shop or someone paying you back for something
 
 # How to use
 1. Install the package
-2. create a type and annotate with `[UnionType]`
-3. Add static methods returning the containing type
+2. create a partial type and annotate with `[UnionType]`
+3. Add static partial methods returning the containing type - these methods can be named anythign you like and can take any arguments you like (but no ref/in/out params!)
+4. Scifa.UnionTypes generates constructors, fields, Match and Do methods for you.
 
 ## Examples
 
