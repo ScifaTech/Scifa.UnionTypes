@@ -29,7 +29,7 @@ jobs:
       env:
         NUGETPUSHKEY: ${{ secrets.NUGETPUSHKEY }}
       run: |
-        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Contract/bin/Release/Scifa.UnionTypes.Generator.*.symbols.nupkg
+        dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Contract/bin/Release/Scifa.UnionTypes.Contract.*.symbols.nupkg
         dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Generator/bin/Release/Scifa.UnionTypes.Generator.*.nupkg
         dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./Scifa.UnionTypes/bin/Release/Scifa.UnionTypes.*.nupkg
         dotnet nuget push -s nuget.org -k $NUGETPUSHKEY --skip-duplicate ./CommonUnions/bin/Release/Scifa.UnionTypes.CommonUnions.*.symbols.nupkg

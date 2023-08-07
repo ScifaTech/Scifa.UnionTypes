@@ -10,7 +10,7 @@
 
 	<PropertyGroup Label="NuGet">
 		<PackageId>Scifa.UnionTypes.Contract</PackageId>
-		<VersionPrefix>0.0.2.1</VersionPrefix>
+		<VersionPrefix>0.0.4</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSources>true</IncludeSources>
 		<IncludeSymbols>true</IncludeSymbols>
