@@ -20,7 +20,7 @@
 		<None Include="..\Readme.md" Pack="true" PackagePath="\"/>
 
 		<ProjectReference Include="..\Contract\Contract.csproj" />
-		<ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+		<ProjectReference Include="..\Generator\Generator.csproj" PrivateAssets="none" />
 	</ItemGroup>
 
 </Project>
