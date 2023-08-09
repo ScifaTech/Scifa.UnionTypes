@@ -254,7 +254,7 @@ namespace UnionTypes.Generator
             var body = @case switch
             {
                 { IsDefault: true } => "default",
-                { EmitCaseType: true } => $$"""new {{{typeName}}}({{{@case.Index}}}, new {{@case.TypeName}}({{@case.Parameters.Select(param => param.CamelName).Join(", ")}}) )""",
+                { EmitCaseType: true } => $$"""new {{typeName}}({{@case.Index}}, new {{@case.TypeName}}({{@case.Parameters.Select(param => param.CamelName).Join(", ")}}) )""",
                 _ => $$"""new {{typeName}}({{@case.Index}}, {{@case.Parameters[0].CamelName}})"""
             };
 
