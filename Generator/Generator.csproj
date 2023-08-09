@@ -9,7 +9,6 @@
 
 	<PropertyGroup Label="NuGet">
 		<PackageId>Scifa.UnionTypes.Generator</PackageId>
-		<VersionPrefix>0.0.5</VersionPrefix>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
@@ -21,10 +20,7 @@
 
 	<ItemGroup>
 		<!-- Add the DLL produced by the current project to the NuGet package -->
-		<None Include="$(OutputPath)\$(AssemblyName).dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs"
-			  Visible="false" />
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
