@@ -293,9 +293,13 @@ namespace UnionTypes.Generator
     {
         public string PascalName { get; } = ParameterSymbol.Name.ToPascalCase();
         public string CamelName { get; } = ParameterSymbol.Name.ToCamelCase();
-        public string TypeName { get; } = ParameterSymbol.Type.GetFullName() + GetNullableAnnotation(ParameterSymbol.NullableAnnotation);
+        public string TypeName { get; } = ParameterSymbol.Type.GetFullName() + GetNullableAnnotation(ParameterSymbol);
 
-        private static string GetNullableAnnotation(NullableAnnotation annotated)
-            => annotated is NullableAnnotation.Annotated ? "?" : string.Empty;
+        private static string GetNullableAnnotation(IParameterSymbol param)
+            => param switch
+            {
+                { Type.IsValueType: false, NullableAnnotation: NullableAnnotation.Annotated } => "?",
+                _ => string.Empty
+            };
     }
 }
