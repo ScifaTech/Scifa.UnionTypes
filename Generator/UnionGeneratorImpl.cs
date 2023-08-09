@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -292,6 +293,9 @@ namespace UnionTypes.Generator
     {
         public string PascalName { get; } = ParameterSymbol.Name.ToPascalCase();
         public string CamelName { get; } = ParameterSymbol.Name.ToCamelCase();
-        public string TypeName { get; } = ParameterSymbol.Type.GetFullName();
+        public string TypeName { get; } = ParameterSymbol.Type.GetFullName() + GetNullableAnnotation(ParameterSymbol.NullableAnnotation);
+
+        private static string GetNullableAnnotation(NullableAnnotation annotated)
+            => annotated is NullableAnnotation.Annotated ? "?" : string.Empty;
     }
 }
