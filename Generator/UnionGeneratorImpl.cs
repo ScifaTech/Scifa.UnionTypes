@@ -249,8 +249,7 @@ namespace UnionTypes.Generator
         private string CaseConstructor(INamedTypeSymbol type, UnionCase @case)
         {
             string typeName = type.GetLocalName();
-            string signature = $$"""{{@case.Accessibility}} static partial {{typeName}} {{@case.PascalName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.CamelName}}""").Join(", ")}}) => """;
-            var caseArgs = @case.Parameters.Select(param => $"{param.TypeName} {param.CamelName}").Join(", ");
+            string signature = $$"""{{@case.Accessibility}} static partial {{typeName}} {{@case.PascalName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.RawName}}""").Join(", ")}}) => """;
 
             var body = @case switch
             {
@@ -291,6 +290,7 @@ namespace UnionTypes.Generator
 
     internal record UnionCaseParameter(IParameterSymbol ParameterSymbol)
     {
+        public string RawName { get; } = ParameterSymbol.Name;
         public string PascalName { get; } = ParameterSymbol.Name.ToPascalCase();
         public string CamelName { get; } = ParameterSymbol.Name.ToCamelCase();
         public string TypeName { get; } = ParameterSymbol.Type.GetFullName() + GetNullableAnnotation(ParameterSymbol);
