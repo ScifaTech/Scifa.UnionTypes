@@ -79,10 +79,11 @@ namespace UnionTypes.Generator
 
                 namespace {{declaredNamespace}};
 
-                {{GetTypeHeaders(typeNesting)}}
+                {{typeNesting.Take(typeNesting.Length - 1).Select(GetTypeHeader).Join("\n")}}
+                [System.Diagnostics.DebuggerDisplay("{DebugView()}")]
+                {{GetTypeHeader(typeNesting.Last())}}
                 
-                {{GetUnionTypeBody(model, typeSymbol)}}
-                
+                {{GetUnionTypeBody(model, typeSymbol)}}                
                 {{GetTypeClosers(typeNesting)}}
                 """.NormalizeLineEndings(),
                 Encoding.UTF8);
@@ -95,24 +96,39 @@ namespace UnionTypes.Generator
             return $$"""
                 {{CaseConstructors(typeSymbol, cases)}}
 
-                private readonly int __case;
+                private readonly CaseName __case;
                 private readonly object __caseData;
             
-                private {{typeSymbol.Name}}(int @case, object caseData){
+                private {{typeSymbol.Name}}(CaseName @case, object caseData){
                     __case = @case;
                     __caseData = caseData;
                 }
+
+                public CaseName Case => __case;
 
             {{MatchFunctions(cases)}}
             
             {{DoFunctions(cases)}}
             
+                private string DebugView()
+                    => __case switch
+                    {
+                        {{cases.Select(@case =>
+                            $$"""{{@case.CaseReference}} => $"{{@case.PascalName}}({{@case.Parameters.Select(param => $"{{{@case.ValueAccessExpression(param)}}}").Join(", ")}})","""
+                          ).Join("\n            ")}}
+                        var x => $"Invalid case {x}: {__caseData ?? "<<null>>"}"
+                    };
+
                 [MethodImpl(MethodImplOptions.NoInlining)]
-                private static TOut ThrowInvalidCaseException<TOut>(int @case)
+                private static TOut ThrowInvalidCaseException<TOut>(CaseName @case)
                 {
                     throw new InvalidOperationException($"Invalid state achieved for union of type {{typeSymbol.Name}}: case {@case} does not exist");
                 }
 
+                public enum CaseName
+                {
+                    {{cases.Select(cases => $"{cases.PascalName} = {cases.Index}").Join(",\n        ")}}
+                }
             {{CaseRecords(cases)}}
             """;
         }
@@ -125,13 +141,13 @@ namespace UnionTypes.Generator
                 {{cases.Select(@case => $$"""/// <param name="{{@case.CamelName}}">The function to execute if this instance is a case of `{{@case.PascalName}}`.</param>""").Join("\n    ")}}
                 /// <returns>The result of the given function for the current case.</returns>
                 public TOut Match<TOut>({{cases.Select(
-                            @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}> {@case.CamelName}"
+                            @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}> {@case.CamelName.EscapeIfKeyword()}"
                         )
                         .Join(", ")}})
                     => __case switch
                     {
                         {{cases.Select(@case =>
-                                           $$"""{{@case.Index}} => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),"""
+                                           $$"""{{@case.CaseReference}} => {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),"""
                           ).Join("\n            ")}}
                         var x => ThrowInvalidCaseException<TOut>(x)
                     };
@@ -143,7 +159,7 @@ namespace UnionTypes.Generator
                 /// <param name="otherwise">The function to execute if this instance represents a case with no specific handler.</param>
                 /// <returns>The result of the given function for the current case or the result of the `otherwise` function if no specific function was given.</returns>
                 public TOut Match<TOut>({{cases.Select(
-                            @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}>? {@case.CamelName} = null"
+                            @case => $"Func<{@case.Parameters.Select(param => param.TypeName).Append("TOut").Join(",")}>? {@case.CamelName.EscapeIfKeyword()} = null"
                         )
                         .Prepend("Func<TOut> otherwise")
                         .Join(", ")}})
@@ -151,7 +167,7 @@ namespace UnionTypes.Generator
                     {
                         {{cases.Select(
                             @case =>
-                                $$"""{{@case.Index}} when {{@case.CamelName}} is not null => {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
+                                $$"""{{@case.CaseReference}} when {{@case.CamelName.EscapeIfKeyword()}} is not null => {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}),""").Join("\n            ")}}
                         _ => otherwise()
                     };
             """;
@@ -166,14 +182,14 @@ namespace UnionTypes.Generator
                         @case =>
                             @case.Parameters switch
                             {
-                                { Length: 0 } => $"Action {@case.CamelName}",
-                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}> {@case.CamelName}"
+                                { Length: 0 } => $"Action {@case.CamelName.EscapeIfKeyword()}",
+                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}> {@case.CamelName.EscapeIfKeyword()}"
                             }
                     ).Join(", "))}})
                 {
                     switch (__case)
                     {
-                        {{cases.Select(@case => $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
+                        {{cases.Select(@case => $$"""case {{@case.CaseReference}}: {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
                         default: ThrowInvalidCaseException<byte>(__case); break;
                     }
@@ -188,8 +204,8 @@ namespace UnionTypes.Generator
                         @case =>
                             @case.Parameters switch
                             {
-                                { Length: 0 } => $"Action {@case.CamelName}",
-                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}> {@case.CamelName}"
+                                { Length: 0 } => $"Action {@case.CamelName.EscapeIfKeyword()}",
+                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}> {@case.CamelName.EscapeIfKeyword()}"
                             }
                     )
                     .Prepend("Action otherwise")
@@ -197,7 +213,7 @@ namespace UnionTypes.Generator
                 {
                     switch (__case)
                     {
-                        {{cases.Select(@case => $$"""case {{@case.Index}}: {{@case.CamelName}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
+                        {{cases.Select(@case => $$"""case {{@case.CaseReference}}: {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
                         default: otherwise(); break;
                     }
@@ -254,8 +270,8 @@ namespace UnionTypes.Generator
             var body = @case switch
             {
                 { IsDefault: true } => "default",
-                { EmitCaseType: true } => $$"""new {{typeName}}({{@case.Index}}, new {{@case.TypeName}}({{@case.Parameters.Select(param => param.CamelName).Join(", ")}}) )""",
-                _ => $$"""new {{typeName}}({{@case.Index}}, {{@case.Parameters[0].CamelName}})"""
+                { EmitCaseType: true } => $$"""new {{typeName}}({{@case.CaseReference}}, new {{@case.TypeName}}({{@case.Parameters.Select(param => param.CamelName.EscapeIfKeyword()).Join(", ")}}) )""",
+                _ => $$"""new {{typeName}}({{@case.CaseReference}}, {{@case.Parameters[0].CamelName.EscapeIfKeyword()}})"""
             };
 
             return $"{signature}{body};";
@@ -276,6 +292,7 @@ namespace UnionTypes.Generator
         public string PascalName { get; } = MethodSymbol.Name.ToPascalCase();
         public string CamelName { get; } = MethodSymbol.Name.ToCamelCase();
         public bool EmitCaseType { get; } = MethodSymbol.Parameters.Count() > 1;
+        public string CaseReference { get; } = $"CaseName.{MethodSymbol.Name.ToPascalCase()}";
         public UnionCaseParameter[] Parameters { get; } = MethodSymbol.Parameters.Select(param => new UnionCaseParameter(param)).ToArray();
         public bool IsDefault { get; internal set; }
         public object TypeName => EmitCaseType
