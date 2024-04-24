@@ -204,8 +204,8 @@ namespace UnionTypes.Generator
                         @case =>
                             @case.Parameters switch
                             {
-                                { Length: 0 } => $"Action {@case.CamelName.EscapeIfKeyword()}",
-                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}> {@case.CamelName.EscapeIfKeyword()}"
+                                { Length: 0 } => $"Action? {@case.CamelName.EscapeIfKeyword()} = null",
+                                _ => $"Action<{@case.Parameters.Select(param => param.TypeName).Join(",")}>? {@case.CamelName.EscapeIfKeyword()} = null"
                             }
                     )
                     .Prepend("Action otherwise")
@@ -213,7 +213,7 @@ namespace UnionTypes.Generator
                 {
                     switch (__case)
                     {
-                        {{cases.Select(@case => $$"""case {{@case.CaseReference}}: {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
+                        {{cases.Select(@case => $$"""case {{@case.CaseReference}} when {{@case.CamelName.EscapeIfKeyword()}} is not null: {{@case.CamelName.EscapeIfKeyword()}}({{@case.Parameters.Select(param => @case.ValueAccessExpression(param)).Join(", ")}}); break;"""
                           ).Join("\n            ")}}
                         default: otherwise(); break;
                     }
