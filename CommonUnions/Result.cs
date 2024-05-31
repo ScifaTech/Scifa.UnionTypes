@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Threading.Tasks;
 using static Scifa.UnionTypes.Result;
 
 namespace Scifa.UnionTypes;
@@ -31,21 +32,22 @@ public static class Result
         return Ok(result);
     }
 
-    public static Result<Unit, TError> Catch<TError>(Action action, Func<Exception, TError> handleException)
-        => Catch<Exception, TError>(action, handleException);
+    public static Task<Result<T, ExceptionDispatchInfo>> CatchAsync<T>(Func<Task<T>> action)
+        => CatchAsync(action, _ => true);
 
-    public static Result<Unit, TError> Catch<TException, TError>(Action action, Func<TException, TError> handleException)
-        where TException : Exception
+    public static async Task<Result<T, ExceptionDispatchInfo>> CatchAsync<T>(Func<Task<T>> action, Predicate<Exception> filter)
     {
+        T result;
         try
         {
-            action();
-            return Ok(Unit.Instance);
+            result = await action();
         }
-        catch (TException ex)
+        catch (Exception ex) when (filter(ex))
         {
-            return Error(handleException(ex));
+            return Error(ExceptionDispatchInfo.Capture(ex));
         }
+
+        return Ok(result);
     }
 
     public static UntypedOk<Unit> Ok() => new(Unit.Instance);
