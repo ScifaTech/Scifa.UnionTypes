@@ -191,7 +191,7 @@ public partial record Result<T, TError>
 
     public bool ToBool() => Match(ok: _ => true, error: _ => false);
 
-    internal bool TryGetOk([NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
+    public bool TryGetOk([NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
     {
         (success, error, bool isOk) = Match(
             ok: v => (v, default(TError?), true),
