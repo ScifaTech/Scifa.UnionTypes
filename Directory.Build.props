@@ -1,7 +1,6 @@
 <Project>
 	<PropertyGroup>
 		<VersionPrefix>0.0.14</VersionPrefix>
-		<VersionSuffix>beta.2</VersionSuffix>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 </Project>
