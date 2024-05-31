@@ -1,12 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.Dynamic;
 using System.Linq;
-using System.Reflection;
 
 namespace UnionTypes.Generator
 {
@@ -40,18 +35,20 @@ namespace UnionTypes.Generator
                 };
 
 
-        public static string GetLocalName(this INamespaceOrTypeSymbol symbol)
+        public static string GetLocalName(this INamespaceOrTypeSymbol symbol, bool leaveGenericOpen = false)
             => symbol switch
             {
-                INamedTypeSymbol type => symbol.Name + GetTypeParameterSpec(type),
+                INamedTypeSymbol type => symbol.Name + GetTypeParameterSpec(type, leaveGenericOpen),
                 IArrayTypeSymbol type => GetLocalName(type.ElementType) + "[]",
                 INamespaceSymbol ns => ns.Name,
                 ITypeParameterSymbol sym => sym.Name
             };
-        private static string GetTypeParameterSpec(INamedTypeSymbol type)
+
+        public static string GetTypeParameterSpec(this INamedTypeSymbol type, bool leaveGenericOpen = false)
             => type switch
             {
                 { IsGenericType: false } => string.Empty,
+                _ when leaveGenericOpen => $"<{type.TypeParameters.Select(p => "").Join(",")}>",
                 { IsUnboundGenericType: true } => $"<{type.TypeParameters.Select(p => p.Name).Join(",")}>",
                 _ => $"<{type.TypeArguments.Select(p => p.GetFullName()).Join(",")}>",
             };

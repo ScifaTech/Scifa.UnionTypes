@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace UnionTypes.Generator
@@ -27,11 +28,14 @@ namespace UnionTypes.Generator
 
         private Compilation _compilation;
         private readonly INamedTypeSymbol? _namedTypeAttributeSymbol;
+        private readonly bool _supportsSerialization;
+        private readonly string _caseFieldName = "$case";
 
         private UnionGeneratorImpl(Compilation compilation, INamedTypeSymbol namedTypeAttributeSymbol)
         {
             _compilation = compilation;
             _namedTypeAttributeSymbol = namedTypeAttributeSymbol;
+            _supportsSerialization = _compilation.GetTypeByMetadataName("System.Text.Json.Serialization.JsonConverter`1") is not null;
         }
 
         internal bool TryGetSource(TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out string? hintName, [NotNullWhen(true)] out SourceText? source)
@@ -72,29 +76,40 @@ namespace UnionTypes.Generator
         {
             var typeNesting = typeSymbol.Unfold(x => x.ContainingType).Reverse().Append(typeSymbol).ToArray();
             var declaredNamespace = typeNesting.First().ContainingNamespace.GetFullName();
+            var cases = GetCases(typeSymbol);
             return SourceText.From($$"""
-                using System;
-                using System.Runtime.CompilerServices;
-                using System.Runtime.InteropServices;
-                using System.Diagnostics;
+                {{GetUsings().OrderBy(u => (u.StartsWith("System"), u)).Select(u => $"using {u};").Join("\n")}}
 
                 namespace {{declaredNamespace}};
 
                 {{typeNesting.Take(typeNesting.Length - 1).Select(GetTypeHeader).Join("\n")}}
                 [DebuggerDisplay("{DebugView()}")]
+                {{SerializationConverterAttribute(typeSymbol)}}
                 {{GetTypeHeader(typeNesting.Last())}}
                 
-                {{GetUnionTypeBody(model, typeSymbol)}}                
+                {{GetUnionTypeBody(typeSymbol, cases)}}                
                 {{GetTypeClosers(typeNesting)}}
+                
+                {{SerializationConverter(typeSymbol, cases)}}
                 """.NormalizeLineEndings(),
                 Encoding.UTF8);
         }
 
-        private string GetUnionTypeBody(SemanticModel model, INamedTypeSymbol typeSymbol)
-        {
-            var cases = GetCases(typeSymbol);
+        private string[] GetUsings()
+            => [
+                "System",
+                "System.Runtime.CompilerServices",
+                "System.Runtime.InteropServices",
+                "System.Diagnostics",
+                ..(_supportsSerialization ? new[]{
+                    "System.Text.Json",
+                    "System.Text.Json.Serialization",
+                    "System.Collections.Generic"
+                } : [])
+            ];
 
-            return $$"""
+        private string GetUnionTypeBody(INamedTypeSymbol typeSymbol, UnionCase[] cases)
+            => $$"""
                 {{CaseConstructors(typeSymbol, cases)}}
 
                 private readonly CaseName __case;
@@ -115,7 +130,7 @@ namespace UnionTypes.Generator
                     => __case switch
                     {
                         {{cases.Select(@case =>
-                            $$"""{{@case.CaseReference}} => $"{{@case.PascalName}}({{@case.Parameters.Select(param => $"{{{@case.ValueAccessExpression(param)}}}").Join(", ")}})","""
+                                                                                                                    $$"""{{@case.CaseReference}} => $"{{@case.PascalName}}({{@case.Parameters.Select(param => $"{{{@case.ValueAccessExpression(param)}}}").Join(", ")}})","""
                           ).Join("\n            ")}}
                         var x => $"Invalid case {x}: {__caseData ?? "<<null>>"}"
                     };
@@ -130,9 +145,9 @@ namespace UnionTypes.Generator
                 {
                     {{cases.Select(cases => $"{cases.PascalName} = {cases.Index}").Join(",\n        ")}}
                 }
+
             {{CaseRecords(cases)}}
             """;
-        }
 
         private string MatchFunctions(UnionCase[] cases)
             => $$"""
@@ -244,7 +259,6 @@ namespace UnionTypes.Generator
             return cases;
         }
 
-        private string GetTypeHeaders(INamedTypeSymbol[] typeNesting) => typeNesting.Select(GetTypeHeader).Join("\n");
         private string GetTypeHeader(INamedTypeSymbol type)
         {
             string accessibility = type.DeclaredAccessibility.GetSourceText();
@@ -285,10 +299,123 @@ namespace UnionTypes.Generator
         private string CaseRecords(UnionCase[] cases)
             => cases.Where(x => x.EmitCaseType)
                 .Select(@case =>
-                    $$"""private record struct {{@case.TypeName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.PascalName}}""").Join(", ")}});"""
+                    $$"""    private record struct {{@case.TypeName}}({{@case.Parameters.Select(param => $$"""{{param.TypeName}} {{param.PascalName}}""").Join(", ")}});"""
                 ).Join("\n    ");
 
         private string GetTypeClosers(INamedTypeSymbol[] typeNesting) => new string('}', typeNesting.Length);
+
+        private string SerializationConverterAttribute(INamedTypeSymbol typeSymbol)
+        {
+            if (!_supportsSerialization)
+                return "";
+
+            return typeSymbol.IsGenericType
+                ? $"[JsonConverter(typeof({typeSymbol.Name}JsonConverterFactory))]"
+                : $"[JsonConverter(typeof({typeSymbol.Name}JsonConverter))]";
+        }
+
+        private string SerializationConverter(INamedTypeSymbol typeSymbol, UnionCase[] cases)
+        {
+            if (!_supportsSerialization)
+                return "";
+
+            var readReturnAnnotation = typeSymbol.IsValueType ? "" : "?";
+            var typePrefix = typeSymbol.Unfold(x => x.ContainingType).Reverse().Select(x => x.GetLocalName()).Join(".");
+            if (typePrefix.Length > 0)
+                typePrefix += ".";
+
+            return typeSymbol.IsGenericType
+                ? $$"""
+                    file class {{typeSymbol.Name}}JsonConverterFactory : JsonConverterFactory
+                    {
+                        public override bool CanConvert(Type typeToConvert)
+                            => typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof({{typePrefix + typeSymbol.GetLocalName(leaveGenericOpen: true)}});
+
+                        public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+                            => (JsonConverter?)Activator.CreateInstance(typeof({{typeSymbol.Name}}JsonConverter{{typeSymbol.GetTypeParameterSpec(leaveGenericOpen: true)}}).MakeGenericType(typeToConvert.GetGenericArguments()));
+
+                        {{GetConverter("private")}}
+                    }
+                    """
+                : GetConverter("file");
+
+            string GetConverter(string access)
+                => $$"""
+                    {{access}} class {{typeSymbol.Name}}JsonConverter{{typeSymbol.GetTypeParameterSpec()}} : JsonConverter<{{typePrefix + typeSymbol.GetLocalName()}}>
+                    {
+                        private const string CaseFieldName = "{{_caseFieldName}}";
+                
+                        public override {{typePrefix + typeSymbol.GetLocalName()}}{{readReturnAnnotation}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+                        {
+                            var fields = JsonSerializer.Deserialize<Dictionary<string, global::System.Text.Json.JsonElement>>(ref reader, options);
+                
+                            if (fields is null)
+                                return default;
+                
+                            if (!fields.TryGetValue(CaseFieldName, out var caseToken))
+                            {
+                                throw new InvalidOperationException($"Unable to deserialize instance of {{typePrefix + typeSymbol.GetLocalName()}} as no case was specified.");
+                            }
+                
+                            var caseString = caseToken.GetString();
+                            if (!Enum.TryParse<{{typePrefix + typeSymbol.GetLocalName()}}.CaseName>(caseString, out var caseValue))
+                            {
+                                throw new InvalidOperationException($"Unable to deserialize instance of {{typePrefix + typeSymbol.GetLocalName()}} as case '{caseString}' is unrecognised.");
+                            }
+                
+                            return caseValue switch
+                            {
+                    {{cases.Select(@case => $$"""
+                                {{typePrefix + typeSymbol.GetLocalName()}}.CaseName.{{@case.PascalName}} => 
+                                    {{typePrefix + typeSymbol.GetLocalName()}}.{{@case.PascalName}}(
+                    {{@case.Parameters.Select(param => $"""
+                                        {param.CamelName.EscapeIfKeyword()}: GetValue<{param.TypeName}>("{param.CamelName}", fields, options)!
+                    """).Join(",\n")}}
+                                    ),
+                    """).Join("\n")}}
+                                _ => throw new InvalidOperationException($"Unable to deserialize instance of {{typePrefix + typeSymbol.GetLocalName()}} as case '{caseString}' is unrecognised."),
+                            };
+                        }
+                
+                        private static TValue GetValue<TValue>(in string propertyName, in Dictionary<string, global::System.Text.Json.JsonElement> fields, in JsonSerializerOptions options)
+                        {
+                            if (!fields.TryGetValue(propertyName, out var valueToken))
+                            {
+                                throw new InvalidOperationException($"Unable to deserialize instance of {{typePrefix + typeSymbol.GetLocalName()}} as no value for '{propertyName}' was specified.");
+                            }
+                
+                            return JsonSerializer.Deserialize<TValue>(valueToken.GetRawText(), options)!;
+                        }
+                
+                        public override void Write(Utf8JsonWriter writer, {{typePrefix + typeSymbol.GetLocalName()}} value, JsonSerializerOptions options)
+                        {
+                            writer.WriteStartObject();
+                            writer.WritePropertyName(CaseFieldName);
+                            writer.WriteStringValue(value.Case.ToString());
+                                
+                            value.Do(
+                    {{cases.Select(@case => $$""" 
+                                {{@case.CamelName.EscapeIfKeyword()}}: ({{@case.Parameters.Select(x => x.CamelName).Join(", ")}}) =>
+                                {
+                    {{@case.Parameters.Select(param => $$"""
+                                    Write("{{param.CamelName}}", {{param.CamelName.EscapeIfKeyword()}});
+                    """).Join("\n")}}
+                                }
+                    """).Join(",\n")}}
+                            );
+                
+                            writer.WriteEndObject();
+                                
+                            void Write<TValue>(string propertyName, TValue value)
+                            {
+                                writer.WritePropertyName(propertyName);
+                                JsonSerializer.Serialize(writer, value, options);
+                            }
+                        }
+                    }
+                    """;
+        }
+
     }
 
     internal record UnionCase(int Index, INamedTypeSymbol TypeSymbol, IMethodSymbol MethodSymbol)
@@ -306,8 +433,8 @@ namespace UnionTypes.Generator
                 ? MethodSymbol.Parameters[0].Type
                 : "Unit";
 
-        public string ValueAccessExpression(UnionCaseParameter param)
-            => this.EmitCaseType ? $"(({this.TypeName})__caseData).{param.PascalName}" : $"(({this.TypeName})__caseData)";
+        public string ValueAccessExpression(UnionCaseParameter param, string objectExpression = "")
+            => this.EmitCaseType ? $"(({this.TypeName}){objectExpression}__caseData).{param.PascalName}" : $"(({this.TypeName}){objectExpression}__caseData)";
     }
 
     internal record UnionCaseParameter(IParameterSymbol ParameterSymbol)

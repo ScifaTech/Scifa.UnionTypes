@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using static Scifa.UnionTypes.Result;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Scifa.UnionTypes;
+
 
 public static class Result
 {
@@ -138,4 +142,85 @@ public partial record Result<T, TError>
 
     public static implicit operator Result<T, TError>(T success) => Ok(success);
     public static implicit operator Result<T, TError>(TError error) => Error(error);
+}
+
+
+
+file class ResultJsonConverterFactory : JsonConverterFactory
+{
+    public override bool CanConvert(Type typeToConvert)
+        => typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Result<,>);
+
+    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+        => (JsonConverter?)Activator.CreateInstance(typeof(ResultJsonConverter<,>).MakeGenericType(typeToConvert.GetGenericArguments()));
+
+    public class ResultJsonConverter<T, TError> : JsonConverter<Result<T, TError>>
+    {
+        private const string CaseFieldName = "$case";
+        private const int MaxProperties = 1;
+        public override Result<T, TError>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var fields = JsonSerializer.Deserialize<Dictionary<string, global::System.Text.Json.JsonElement>>(ref reader, options);
+
+            if (fields is null)
+                return default;
+
+            if (!fields.TryGetValue(CaseFieldName, out var caseToken))
+            {
+                throw new InvalidOperationException($"Unable to deserialize instance of Result<T,TError> as no case was specified.");
+            }
+
+            var caseString = caseToken.GetString();
+            if (!Enum.TryParse<Result<T, TError>.CaseName>(caseString, out var caseValue))
+            {
+                throw new InvalidOperationException($"Unable to deserialize instance of Result<T,TError> as case '{caseString}' is unrecognised.");
+            }
+
+            return caseValue switch
+            {
+                Result<T, TError>.CaseName.Ok =>
+                    Result<T, TError>.Ok(
+                        value: GetValue<T>("value", fields, options)!
+                    ),
+                Result<T, TError>.CaseName.Error =>
+                    Result<T, TError>.Error(
+                        value: GetValue<TError>("value", fields, options)!
+                    ),
+                _ => throw new InvalidOperationException($"Unable to deserialize instance of Result<T,TError> as case '{caseString}' is unrecognised."),
+            };
+        }
+
+        private static TValue GetValue<TValue>(in string propertyName, in Dictionary<string, global::System.Text.Json.JsonElement> fields, in JsonSerializerOptions options)
+        {
+            if (!fields.TryGetValue(propertyName, out var valueToken))
+            {
+                throw new InvalidOperationException($"Unable to deserialize instance of Result<T,TError> as no value for '{propertyName}' was specified.");
+            }
+
+            return JsonSerializer.Deserialize<TValue>(valueToken.GetRawText(), options)!;
+        }
+
+        public override void Write(Utf8JsonWriter writer, Result<T, TError> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName(CaseFieldName);
+            writer.WriteStringValue(value.Case.ToString());
+            value.Do(
+                value =>
+                {
+                    Write("value", value);
+                },
+                error =>
+                {
+                    Write("error", error);
+                });
+            writer.WriteEndObject();
+
+            void Write<TValue>(string propertyName, TValue value)
+            {
+                writer.WritePropertyName(propertyName);
+                JsonSerializer.Serialize(writer, value, options);
+            }
+        }
+    }
 }

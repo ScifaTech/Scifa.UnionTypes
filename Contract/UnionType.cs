@@ -8,4 +8,8 @@ namespace Scifa.UnionTypes;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
 public sealed class UnionTypeAttribute : Attribute
 {
+    /// <summary>
+    /// Specifies the name used for the field used for the case when serializing to JSON
+    /// </summary>
+    public string SerializationCaseFieldName { get; set; } = "$case";
 }

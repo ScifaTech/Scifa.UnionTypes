@@ -30,6 +30,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include=".\obj\$(Configuration)\net7.0\generated\Generator\UnionTypes.Generator.UnionGenerator\**\*.cs" Link="Generated/%(FileName)%(Extension)" />
+		<None Include=".\obj\$(Configuration)\$(TargetFramework)\generated\Generator\UnionTypes.Generator.UnionGenerator\**\*.cs" Link="Generated/%(FileName)%(Extension)" />
 	</ItemGroup>
 </Project>
