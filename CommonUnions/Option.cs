@@ -8,6 +8,16 @@ public readonly partial struct Option<T>
     public static partial Option<T> Some(T value);
 
     /// <summary>
+    /// Get the value if specified, otherwise return a default value
+    /// </summary>
+    public T DefaultValue(T defaultValue) => Match(some: x => x, none: () => defaultValue);
+
+    /// <summary>
+    /// Get the value if specified, otherwise return a default value
+    /// </summary>
+    public T DefaultValue(Func<T> defaultValueFactory) => Match(some: x => x, none: defaultValueFactory);
+
+    /// <summary>
     /// Implicitly convert an <see cref="UntypedNone"/> to an <see cref="Option{T}"/>.
     /// </summary>
     public static implicit operator Option<T>(UntypedNone _) => Option<T>.None();
