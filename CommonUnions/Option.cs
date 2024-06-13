@@ -7,7 +7,15 @@ public readonly partial struct Option<T>
     public static partial Option<T> None();
     public static partial Option<T> Some(T value);
 
+    /// <summary>
+    /// Implicitly convert an <see cref="UntypedNone"/> to an <see cref="Option{T}"/>.
+    /// </summary>
     public static implicit operator Option<T>(UntypedNone _) => Option<T>.None();
+
+    /// <summary>
+    /// Implicitly convert a value to an Option
+    /// </summary>
+    public static implicit operator Option<T>(T value) => Option<T>.Some(value);
 }
 
 public static class Option
