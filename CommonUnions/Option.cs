@@ -36,7 +36,7 @@ public static class Option
     public static UntypedNone None => new UntypedNone();
 
     public static Option<T> FromNullable<T>(T? value) where T : struct => value.HasValue ? Some(value.Value) : None;
-    public static Option<T> FromNullable<T>(T? value) where T : class => value is T ? Some(valu) : None;
+    public static Option<T> FromNullable<T>(T? value) where T : class => value is T ? Some(value) : None;
 
     public static Option<U> Map<T, U>(this Option<T> @this, Func<T, U> map) => @this.Bind(x => Option<U>.Some(map(x)));
     public static Option<U> Bind<T, U>(this Option<T> @this, Func<T, Option<U>> map) => @this.Match(some: x => map(x), none: Option<U>.None);
