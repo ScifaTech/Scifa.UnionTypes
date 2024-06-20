@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using static Scifa.UnionTypes.Result;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Scifa.UnionTypes;
 
@@ -14,22 +15,22 @@ namespace Scifa.UnionTypes;
 public static class Result
 {
     /// <summary>
-    /// Creates a new instance of <see cref="UntypedOk{T}"/> with the specified value.
+    /// Creates a new instance of <see cref="PartialOk{T}"/> with the specified value.
     /// This can be implictly cast to <see cref="Result{T, TError}"/> for any error type.
     /// </summary>
     /// <typeparam name="T">The type of <paramref name="value"/></typeparam>
     /// <param name="value">The value</param>
     /// <returns>An object that can be implicitly cast to an instance of <see cref="Result{T, TError}"/> regardless of the error type.</returns>
-    public static UntypedOk<T> Ok<T>(T value) => new(value);
+    public static PartialOk<T> Ok<T>(T value) => new(value);
 
     /// <summary>
-    /// Creates a new instance of <see cref="UntypedOk{T}"/> with the specified value.
+    /// Creates a new instance of <see cref="PartialOk{T}"/> with the specified value.
     /// This can be implictly cast to <see cref="Result{T, TError}"/> for any value type.
     /// </summary>
     /// <typeparam name="TError">The type of <paramref name="error"/></typeparam>
     /// <param name="error">Details of the error that occurred</param>
     /// <returns>An object that can be implicitly cast to an instance of <see cref="Result{T, TError}"/> regardless of the value type.</returns>
-    public static UntypedError<TError> Error<TError>(TError error) => new(error);
+    public static PartialError<TError> Error<TError>(TError error) => new(error);
 
     /// <summary>
     /// Execute a given function catching any exceptions that occur and returning them as an <see cref="Result{T, TError}"/> with the error type
@@ -122,16 +123,98 @@ public static class Result
         );
 
     /// <summary>
+    /// Supports deconstruction of a <see cref="Result{T, TError}"/> into a tuple containing the value and error as nullable components.
+    /// </summary>
+    public static void Deconstruct<T, TError>(this Result<T, TError> @this, out T? value, out TError? err)
+        where T : struct
+        where TError : struct
+        => (value, err) = @this.Match<(T?, TError?)>(ok: v => (v, null), error: e => (null, e));
+
+    /// <summary>
+    /// Supports deconstruction of a <see cref="Result{T, TError}"/> into a tuple containing the value and error as nullable components.
+    /// </summary>
+    public static void Deconstruct<T, TError>(this Result<T, TError> @this, out T? value, out TError? err)
+        where T : struct
+        where TError : class
+        => (value, err) = @this.Match<(T?, TError?)>(ok: v => (v, null), error: e => (null, e));
+
+    /// <summary>
+    /// Supports deconstruction of a <see cref="Result{T, TError}"/> into a tuple containing the value and error as nullable components.
+    /// </summary>
+    public static void Deconstruct<T, TError>(this Result<T, TError> @this, out T? value, out TError? err)
+        where T : class
+        where TError : struct
+        => (value, err) = @this.Match<(T?, TError?)>(ok: v => (v, null), error: e => (null, e));
+
+    /// <summary>
+    /// Supports deconstruction of a <see cref="Result{T, TError}"/> into a tuple containing the value and error as nullable components.
+    /// </summary>
+    public static void Deconstruct<T, TError>(this Result<T, TError> @this, out T? value, out TError? err)
+        where T : class
+        where TError : class
+        => (value, err) = @this.Match<(T?, TError?)>(ok: v => (v, null), error: e => (null, e));
+
+    /// <summary>
+    /// Gets a value indicating whether the result is rep[resents a success, <see langword="true"/>, or an error, <see langword="false"/>.
+    /// </summary>
+    public static bool ToBool<T, TError>(this Result<T, TError> @this) => @this.Match(ok: _ => true, error: _ => false);
+
+    /// <summary>
+    /// Breaks a <see cref="Result{T, TError}"/> into its components returning a value indicating if the result was a success.
+    /// </summary>
+    public static bool TryGetOk<T, TError>(this Result<T, TError> @this, [NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
+        where T : struct
+        where TError : struct
+    {
+        (success, error) = @this;
+        return success is not null;
+    }
+
+    /// <summary>
+    /// Breaks a <see cref="Result{T, TError}"/> into its components returning a value indicating if the result was a success.
+    /// </summary>
+    public static bool TryGetOk<T, TError>(this Result<T, TError> @this, [NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
+        where T : struct
+        where TError : class
+    {
+        (success, error) = @this;
+        return success is not null;
+    }
+
+    /// <summary>
+    /// Breaks a <see cref="Result{T, TError}"/> into its components returning a value indicating if the result was a success.
+    /// </summary>
+    public static bool TryGetOk<T, TError>(this Result<T, TError> @this, [NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
+        where T : class
+        where TError : struct
+    {
+        (success, error) = @this;
+        return success is not null;
+    }
+
+    /// <summary>
+    /// Breaks a <see cref="Result{T, TError}"/> into its components returning a value indicating if the result was a success.
+    /// </summary>
+    public static bool TryGetOk<T, TError>(this Result<T, TError> @this, [NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
+        where T : class
+        where TError : class
+    {
+        (success, error) = @this;
+        return success is not null;
+    }
+
+    /// <summary>
     /// A utility type that permits create an instance of <see cref="Result{T, TError}"/> without specifying the type of the error.
     /// </summary>
-    public record class UntypedOk<T>(T Value);
+    public record class PartialOk<T>(T Value);
 
     /// <summary>
     /// A utility type that permits create an instance of <see cref="Result{T, TError}"/> without specifying the type of the value.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="Value"></param>
-    public record class UntypedError<T>(T Value);
+    public record class PartialError<T>(T Value);
+
 }
 
 [UnionType]
@@ -140,7 +223,6 @@ public partial record Result<T, TError>
     public static partial Result<T, TError> Ok(T value);
     public static partial Result<T, TError> Error(TError value);
 
-    public void Deconstruct(out T? value, out TError? err) => (value, err) = Match(ok: v => (v, default(TError)), error: e => (default(T), e));
 
     public Result<T, TError> Tee(Action<T> teeOk)
     {
@@ -189,19 +271,9 @@ public partial record Result<T, TError>
 
     public T IfError(T errorValue) => Match(ok: v => v, error: _ => errorValue);
 
-    public bool ToBool() => Match(ok: _ => true, error: _ => false);
 
-    public bool TryGetOk([NotNullWhen(true)] out T? success, [NotNullWhen(false)] out TError? error)
-    {
-        (success, error, bool isOk) = Match(
-            ok: v => (v, default(TError?), true),
-            error: e => (default(T?), e, false)
-        );
-        return isOk;
-    }
-
-    public static implicit operator Result<T, TError>(UntypedOk<T> success) => Ok(success.Value);
-    public static implicit operator Result<T, TError>(UntypedError<TError> error) => Error(error.Value);
+    public static implicit operator Result<T, TError>(PartialOk<T> success) => Ok(success.Value);
+    public static implicit operator Result<T, TError>(PartialError<TError> error) => Error(error.Value);
 
     public static implicit operator Result<T, TError>(T success) => Ok(success);
     public static implicit operator Result<T, TError>(TError error) => Error(error);
