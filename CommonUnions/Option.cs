@@ -66,6 +66,8 @@ public static class Option
 
     public static Option<T> TryGetAt<T>(this IReadOnlyList<T> source, int index)
         => source.Count > index ? Some(source[index]) : Option<T>.None();
+    public static Option<T> TryGetValue<K, T>(this IReadOnlyDictionary<K, T> source, K key)
+        => source.TryGetValue(key, out var value) ? Some(value) : Option<T>.None();
 
     public static IEnumerable<T> ToEnumerable<T>(this Option<T> option)
         => option.Match(
