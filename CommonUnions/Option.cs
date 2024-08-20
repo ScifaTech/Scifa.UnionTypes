@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.FileIO;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -63,6 +64,25 @@ public static class Option
             some: v => [v],
             none: Enumerable.Empty<T>
         );
+
+    /// <summary>
+    /// Gets all non-None values from the sequence.
+    /// </summary>
+    /// <typeparam name="T">The type of values in the given sequence</typeparam>
+    /// <param name="source">A sequnce of optional values to filter</param>
+    public static IEnumerable<T> Choose<T>(this IEnumerable<Option<T>> source)
+    {
+        foreach (var option in source)
+        {
+            var (isSome, value) = option.Match(
+                some: v => (true, v),
+                none: () => (false, default)
+            );
+
+            if (isSome)
+                yield return value;
+        }
+    }
 }
 
 public readonly ref struct UntypedNone { }
