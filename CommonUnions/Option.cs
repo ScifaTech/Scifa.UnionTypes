@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Runtime.CompilerServices;
 namespace Scifa.UnionTypes;
 
 [UnionType]
@@ -17,7 +21,6 @@ public readonly partial struct Option<T>
     /// </summary>
     public T DefaultValue(Func<T> defaultValueFactory) => Match(some: x => x, none: defaultValueFactory);
 
-    public T? ToNullable() => Match(some: x => x, none: () => default);
 
     /// <summary>
     /// Implicitly convert an <see cref="UntypedNone"/> to an <see cref="Option{T}"/>.
@@ -40,6 +43,26 @@ public static class Option
 
     public static Option<U> Map<T, U>(this Option<T> @this, Func<T, U> map) => @this.Bind(x => Option<U>.Some(map(x)));
     public static Option<U> Bind<T, U>(this Option<T> @this, Func<T, Option<U>> map) => @this.Match(some: x => map(x), none: Option<U>.None);
+
+    public static T? ToNullable<T>(this Option<T> @this) where T : notnull => @this.Match(none: () => default(T?), some: x => x);
+
+    public static bool TryGetValue<T>(this Option<T> option, [NotNullWhen(true)] out T? value) where T : class
+    {
+        (var result, value) = option.Match(
+            some: v => (true, (T?)v),
+            none: () => (false, null)
+        );
+        return result;
+    }
+
+    public static Option<T> TryGetAt<T>(this IReadOnlyList<T> source, int index)
+        => source.Count > index ? Some(source[index]) : Option<T>.None();
+
+    public static IEnumerable<T> ToEnumerable<T>(this Option<T> option)
+        => option.Match(
+            some: v => [v],
+            none: Enumerable.Empty<T>
+        );
 }
 
 public readonly ref struct UntypedNone { }
