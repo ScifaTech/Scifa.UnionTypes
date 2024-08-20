@@ -55,6 +55,14 @@ public static class Option
         );
         return result;
     }
+    public static bool TryGetValue<T>(this Option<T> option, [NotNullWhen(true)] out T? value) where T : struct
+    {
+        (var result, value) = option.Match(
+            some: v => (true, (T?)v),
+            none: () => (false, null)
+        );
+        return result;
+    }
 
     public static Option<T> TryGetAt<T>(this IReadOnlyList<T> source, int index)
         => source.Count > index ? Some(source[index]) : Option<T>.None();
